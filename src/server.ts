@@ -22,9 +22,9 @@ app.post("/movies", async (req, res) => {
     try {
 
         const movieWithSameTitle = await prisma.movie.findFirst({
-            where: { 
+            where: {
                 title: { equals: title, mode: "insensitive" }
-            }, 
+            },
         });
 
         if (movieWithSameTitle) {
@@ -49,7 +49,37 @@ app.post("/movies", async (req, res) => {
     res.status(201).send();
 });
 
+app.put("/movies/:id", async (req, res) => {
+    //pegar o id do registro que vai ser atualizado
+    const id = Number(req.params.id);
+
+    const movie = await prisma.movie.findUnique({
+        where: {
+            id
+        }
+    });
+
+    if (!movie) {
+        return res.status(404).send({ message: "Filme não encontrado" });
+    }
+
+    const data = { ...req.body };
+    data.release_date = data.release_date ? new Date(data.release_date) : undefined;
+
+    //pegar os dados do filme que será atualizado e atualizar ele no prisma
+    await prisma.movie.update({
+        where: {
+            id
+        },
+        data: data
+    });
+
+    //retornar o status correto informando o filme que foi atualizado
+    res.status(200).send();
+});
+
 app.listen(port, () => {
     console.log(`Servidor em execução em http://localhost:${port}`);
+
 });
 
